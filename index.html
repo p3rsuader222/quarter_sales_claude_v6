@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quarterly Sales Target Prediction Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3px;
+            border-radius: 1.5rem;
+        }
+        .gradient-border-inner {
+            background: white;
+            border-radius: 1.35rem;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        .metric-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center gap-3 glass-card rounded-2xl shadow-2xl px-8 py-5 mb-6 float-animation">
+                <div class="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div class="text-left">
+                    <h1 class="text-3xl font-black bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Sales Target Calculator</h1>
+                    <p class="text-sm text-gray-600 font-semibold">Data-Driven Quarterly Predictions</p>
+                </div>
+            </div>
+            <div class="max-w-3xl mx-auto glass-card border-l-4 border-amber-400 p-5 rounded-xl shadow-lg">
+                <div class="flex items-start gap-3">
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-sm font-bold text-gray-800 mb-1">Statistical Limitation Notice</p>
+                        <p class="text-xs text-gray-700 leading-relaxed">This calculator provides directional guidance based on limited historical data (2-6 quarters). For statistically robust forecasting, 24+ months of data and advanced time-series models are recommended. Use these targets as <strong>informed estimates, not guarantees</strong>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Inputs -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Quarter Selection Card -->
+                <div class="gradient-border">
+                    <div class="gradient-border-inner glass-card p-6">
+                        <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <div class="p-1.5 bg-violet-100 rounded-lg">
+                                <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            Target Quarter (2026)
+                        </label>
+                        <select id="quarterSelect" class="w-full px-4 py-3.5 text-base font-bold border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white transition-all shadow-sm hover:border-gray-300">
+                            <option value="Q1">Q1 (Jan-Mar)</option>
+                            <option value="Q2">Q2 (Apr-Jun)</option>
+                            <option value="Q3">Q3 (Jul-Sep)</option>
+                            <option value="Q4">Q4 (Oct-Dec)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Historical Data Card -->
+                <div class="glass-card rounded-2xl shadow-xl p-6 border border-white">
+                    <label class="block text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Historical Quarterly Sales
+                    </label>
+                    
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-indigo-600 mb-1 block flex items-center gap-1">
+                                <span class="bg-indigo-100 px-2 py-0.5 rounded">2025</span>
+                                <span class="text-red-500">*Required</span>
+                            </label>
+                            <input type="number" id="input2025" placeholder="e.g., 500000" class="w-full px-4 py-3 text-base font-semibold border-2 border-indigo-300 bg-indigo-50 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        </div>
+                        
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-gray-600 mb-1 block">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">2024</span>
+                            </label>
+                            <input type="number" id="input2024" placeholder="e.g., 400000" class="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-all">
+                        </div>
+                        
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-gray-600 mb-1 block">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">2023</span>
+                            </label>
+                            <input type="number" id="input2023" placeholder="e.g., 300000" class="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-all">
+                        </div>
+                        
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-gray-600 mb-1 block">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">2022</span>
+                            </label>
+                            <input type="number" id="input2022" placeholder="e.g., 200000" class="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-all">
+                        </div>
+                        
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-gray-600 mb-1 block">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">2021</span>
+                            </label>
+                            <input type="number" id="input2021" placeholder="e.g., 150000" class="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-all">
+                        </div>
+                        
+                        <div class="relative">
+                            <label class="text-xs font-semibold text-gray-600 mb-1 block">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">2020</span>
+                            </label>
+                            <input type="number" id="input2020" placeholder="e.g., 100000" class="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-all">
+                        </div>
+                    </div>
+
+                    <button onclick="calculateTarget()" class="w-full mt-6 px-6 py-4 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95">
+                        <span class="flex items-center justify-center gap-2">
+                            <span>Calculate Target</span>
+                            <span class="text-xl">🎯</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="lg:col-span-2">
+                <div id="results" style="display: none;" class="space-y-6">
+                    <!-- Target Card -->
+                    <div class="glass-card rounded-2xl shadow-2xl p-8 border border-white bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                        <div class="text-center mb-6">
+                            <p class="text-sm font-semibold opacity-90 mb-2">2026 <span id="targetQuarter"></span> RECOMMENDED TARGET</p>
+                            <p id="targetValue" class="text-6xl font-black mb-2"></p>
+                            <div class="flex items-center justify-center gap-2 text-sm mb-4">
+                                <div class="bg-white/20 rounded-lg px-3 py-1">
+                                    <span id="growthRate" class="font-bold"></span>
+                                    <span class="opacity-90 ml-1">growth</span>
+                                </div>
+                                <div class="bg-white/20 rounded-lg px-3 py-1">
+                                    <span class="opacity-90">Confidence:</span>
+                                    <span id="confidenceScore" class="font-bold ml-1"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-white/30">
+                            <div class="text-center">
+                                <p class="text-xs opacity-75 mb-1">⚠️ Floor</p>
+                                <p id="floorTarget" class="text-xl font-bold"></p>
+                                <p id="floorPercent" class="text-xs opacity-75 mt-1"></p>
+                            </div>
+                            <div class="text-center bg-white/20 rounded-lg py-2">
+                                <p class="text-xs opacity-75 mb-1">✅ Target</p>
+                                <p id="realisticTarget" class="text-xl font-bold"></p>
+                                <p id="targetPercent" class="text-xs opacity-75 mt-1"></p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs opacity-75 mb-1">🎯 Stretch</p>
+                                <p id="stretchTarget" class="text-xl font-bold"></p>
+                                <p id="stretchPercent" class="text-xs opacity-75 mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Explanation -->
+                    <div class="glass-card rounded-2xl shadow-xl p-6 border border-white bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <h3 class="text-base font-bold text-gray-800 mb-3">💡 Why This Target?</h3>
+                        <p id="plainExplanation" class="text-sm text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Metrics -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="glass-card rounded-xl p-4 border border-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-semibold text-gray-600 uppercase">Trend</p>
+                                <span id="trendIcon"></span>
+                            </div>
+                            <p id="trendText" class="text-2xl font-bold text-gray-800 capitalize"></p>
+                            <p id="trendScore" class="text-xs text-gray-500 mt-1"></p>
+                            <div class="mt-2 p-2 bg-indigo-50 rounded text-xs text-gray-700">
+                                <strong>What this means:</strong> Shows if your sales are going up, down, or staying flat over time. Growth = getting better, Falling = needs attention, Stagnant = not moving much.
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl p-4 border border-white">
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Recent Quarter</p>
+                            <p id="recentValue" class="text-2xl font-bold text-gray-800"></p>
+                            <p id="recentMomentum" class="text-xs text-gray-500 mt-1"></p>
+                            <div class="mt-2 p-2 bg-indigo-50 rounded text-xs text-gray-700">
+                                <strong>What this means:</strong> Your most recent quarterly sales and how much they changed from the previous quarter. Positive % = improving, negative % = declined.
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl p-4 border border-white">
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-2">CAGR</p>
+                            <p id="cagrValue" class="text-2xl font-bold text-gray-800"></p>
+                            <p class="text-xs text-gray-500 mt-1">Annual growth</p>
+                            <div class="mt-2 p-2 bg-indigo-50 rounded text-xs text-gray-700">
+                                <strong>What this means:</strong> <span id="cagrExplanation">Your compound annual growth rate. Shows your average year-over-year growth trend.</span>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl p-4 border border-white">
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Volatility</p>
+                            <p id="volatilityValue" class="text-2xl font-bold text-gray-800"></p>
+                            <p id="volatilityLabel" class="text-xs text-gray-500 mt-1"></p>
+                            <div class="mt-2 p-2 bg-indigo-50 rounded text-xs text-gray-700">
+                                <strong>What this means:</strong> How unpredictable your sales are. Low = stable, High = jumpy. High volatility means lower confidence (but same target).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="glass-card rounded-2xl shadow-xl p-6 border border-white">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Sales Trend Analysis</h3>
+                        <canvas id="salesChart" height="80"></canvas>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <details class="glass-card rounded-2xl p-6 border border-white">
+                        <summary class="cursor-pointer font-bold text-gray-800 hover:text-indigo-600">🔍 Technical Details</summary>
+                        <ul class="text-xs text-gray-700 space-y-2 mt-4" id="technicalDetails"></ul>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function formatCurrency(value) {
+            return '€' + value.toLocaleString(undefined, {maximumFractionDigits: 0});
+        }
+
+        function calculateStdDev(dataPoints, mean) {
+            if (dataPoints.length < 2) return 0;
+            const squaredDiffs = dataPoints.map(dp => Math.pow(dp.value - mean, 2));
+            const variance = squaredDiffs.reduce((a, b) => a + b, 0) / dataPoints.length;
+            return Math.sqrt(variance);
+        }
+
+        function calculateTarget() {
+            const selectedQuarter = document.getElementById('quarterSelect').value;
+            
+            const salesData = {
+                '2025': document.getElementById('input2025').value,
+                '2024': document.getElementById('input2024').value,
+                '2023': document.getElementById('input2023').value,
+                '2022': document.getElementById('input2022').value,
+                '2021': document.getElementById('input2021').value,
+                '2020': document.getElementById('input2020').value
+            };
+
+            const dataPoints = Object.entries(salesData)
+                .filter(([_, value]) => value !== '' && !isNaN(parseFloat(value)))
+                .map(([year, value]) => ({
+                    year: parseInt(year),
+                    value: parseFloat(value)
+                }))
+                .sort((a, b) => a.year - b.year);
+
+            if (dataPoints.length === 0) {
+                alert('Please enter at least the 2025 quarterly data');
+                return;
+            }
+
+            const n = dataPoints.length;
+            const mostRecentValue = dataPoints[n - 1].value;
+            
+            // Calculate metrics
+            let recentMomentum = 0;
+            let simpleAverageGrowth = 0;
+            let cagr = 0;
+            
+            if (n >= 2) {
+                const prevValue = dataPoints[n - 2].value;
+                recentMomentum = prevValue === 0 ? (mostRecentValue > 0 ? 1 : 0) : (mostRecentValue - prevValue) / prevValue;
+                
+                // Simple average growth
+                let totalGrowth = 0;
+                let growthCount = 0;
+                for (let i = 1; i < n; i++) {
+                    if (dataPoints[i - 1].value > 0) {
+                        totalGrowth += (dataPoints[i].value - dataPoints[i - 1].value) / dataPoints[i - 1].value;
+                        growthCount++;
+                    }
+                }
+                simpleAverageGrowth = growthCount > 0 ? totalGrowth / growthCount : 0;
+                
+                // CAGR only if 4+ quarters
+                if (n >= 4) {
+                    const firstValue = dataPoints[0].value;
+                    const lastValue = dataPoints[n - 1].value;
+                    if (firstValue > 0) {
+                        cagr = Math.pow(lastValue / firstValue, 1 / (n - 1)) - 1;
+                    }
+                }
+            }
+            
+            // Determine trend
+            let trend = 'growth';
+            let trendScore = recentMomentum * 100;
+            
+            if (recentMomentum < -0.3) {
+                trend = 'falling';
+            } else if (recentMomentum < -0.15 && simpleAverageGrowth < 0) {
+                trend = 'falling';
+            } else if (Math.abs(recentMomentum) < 0.15 && Math.abs(simpleAverageGrowth) < 0.10) {
+                trend = 'stagnant';
+            } else if (recentMomentum < 0 && simpleAverageGrowth < 0) {
+                trend = 'falling';
+            }
+            
+            // Calculate volatility
+            const regularAverage = dataPoints.reduce((sum, dp) => sum + dp.value, 0) / n;
+            const dataStdDev = calculateStdDev(dataPoints, regularAverage);
+            const volatility = regularAverage > 0 ? dataStdDev / regularAverage : 0;
+            
+            // Recovery logic
+            const isRecovering = n >= 2 && recentMomentum < -0.1;
+            let recoveryTarget = 0;
+            let consecutiveDeclines = 0;
+            
+            if (n >= 3) {
+                for (let i = n - 1; i > 0; i--) {
+                    if (dataPoints[i].value < dataPoints[i - 1].value) {
+                        consecutiveDeclines++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            if (isRecovering) {
+                const recentQuarters = dataPoints.slice(Math.max(0, n - 3), n);
+                const peakValue = Math.max(...recentQuarters.map(dp => dp.value));
+                
+                let recoveryFactor = 0.50;
+                if (volatility > 0.4) recoveryFactor = 0.35;
+                else if (volatility > 0.3) recoveryFactor = 0.40;
+                if (consecutiveDeclines >= 2) recoveryFactor *= 0.75;
+                
+                recoveryTarget = peakValue * recoveryFactor;
+            }
+            
+            // Calculate target
+            let targetSales;
+            
+            if (n === 1) {
+                targetSales = mostRecentValue * 1.20;
+            } else if (n === 2 || n === 3) {
+                let dampenedMomentum = recentMomentum;
+                if (Math.abs(recentMomentum) > 0.5) {
+                    dampenedMomentum = Math.sign(recentMomentum) * Math.sqrt(Math.abs(recentMomentum));
+                }
+                
+                const momentumPrediction = mostRecentValue * (1 + dampenedMomentum * 0.5);
+                const conservativeGrowth = mostRecentValue * 1.15;
+                
+                if (isRecovering) {
+                    targetSales = (recoveryTarget * 0.50 + conservativeGrowth * 0.50);
+                } else {
+                    targetSales = (momentumPrediction * 0.50 + conservativeGrowth * 0.50);
+                }
+                
+                // ABSOLUTE CAPS: 10% floor, 50% ceiling
+                const absoluteFloor = mostRecentValue * 1.10;
+                const absoluteCeiling = mostRecentValue * 1.50;
+                targetSales = Math.max(absoluteFloor, Math.min(targetSales, absoluteCeiling));
+                
+            } else {
+                // 4+ quarters
+                const momentumPrediction = mostRecentValue * (1 + recentMomentum * 0.6);
+                const avgGrowthPrediction = mostRecentValue * (1 + simpleAverageGrowth);
+                const cagrPrediction = mostRecentValue * (1 + cagr);
+                
+                if (isRecovering) {
+                    targetSales = (
+                        recoveryTarget * 0.50 +
+                        momentumPrediction * 0.30 +
+                        avgGrowthPrediction * 0.20
+                    );
+                } else {
+                    targetSales = (
+                        momentumPrediction * 0.50 +
+                        avgGrowthPrediction * 0.30 +
+                        cagrPrediction * 0.20
+                    );
+                }
+                
+                // ABSOLUTE CAPS: 10% floor, 50% ceiling
+                const absoluteFloor = mostRecentValue * 1.10;
+                const absoluteCeiling = mostRecentValue * 1.50;
+                targetSales = Math.max(absoluteFloor, Math.min(targetSales, absoluteCeiling));
+            }
+            
+            const floorTarget = Math.max(mostRecentValue * 1.05, targetSales * 0.90);
+            const stretchTarget = Math.min(targetSales * 1.20, mostRecentValue * (n >= 4 ? (1 + Math.max(cagr * 1.5, 0.45)) : 1.40));
+            
+            const growthRate = ((targetSales / mostRecentValue - 1) * 100);
+            const floorGrowth = ((floorTarget / mostRecentValue - 1) * 100);
+            const stretchGrowth = ((stretchTarget / mostRecentValue - 1) * 100);
+            
+            // Confidence score
+            let confidenceScore = 100;
+            
+            if (n === 1) confidenceScore = 30;
+            else if (n === 2) confidenceScore = 45;
+            else if (n === 3) confidenceScore = 55;
+            else if (n === 4) confidenceScore = 65;
+            else if (n === 5) confidenceScore = 70;
+            else confidenceScore = 75;
+            
+            if (volatility > 0.5) confidenceScore -= 20;
+            else if (volatility > 0.3) confidenceScore -= 15;
+            else if (volatility > 0.15) confidenceScore -= 10;
+            
+            if (Math.abs(trendScore) < 5) confidenceScore -= 5;
+            if (n >= 4 && Math.abs(trendScore) > 20) confidenceScore += 5;
+            
+            confidenceScore = Math.max(25, Math.min(75, confidenceScore));
+            
+            // Explanation
+            let explanation = '';
+            let dataQualityWarning = '';
+            
+            if (n <= 3) {
+                dataQualityWarning = `⚠️ LIMITED DATA (${n} quarter${n > 1 ? 's' : ''}): This prediction has high uncertainty. `;
+            } else if (n <= 5) {
+                dataQualityWarning = `📊 MODERATE DATA (${n} quarters): Prediction is directional but not statistically robust. `;
+            }
+            
+            if (n === 1) {
+                explanation = `${dataQualityWarning}With only one quarter of data (${formatCurrency(mostRecentValue)}), we're setting a conservative ${formatCurrency(targetSales)} target (+20% growth). This is a baseline estimate - add more historical data for better accuracy.`;
+            } else if (n === 2 || n === 3) {
+                explanation = `${dataQualityWarning}With ${n} quarters, we're using a simplified approach: 50% recent momentum (${(recentMomentum * 100).toFixed(0)}%) + 50% conservative baseline. Target: ${formatCurrency(targetSales)} (+${growthRate.toFixed(0)}% growth). For more accurate predictions, provide 4-6 quarters of historical data.`;
+            } else if (isRecovering) {
+                const peakQuarters = dataPoints.slice(Math.max(0, n - 3), n);
+                const peakValue = Math.max(...peakQuarters.map(dp => dp.value));
+                const dropPercent = Math.abs((mostRecentValue - peakValue) / peakValue * 100);
+                const recoveryPercent = ((targetSales - mostRecentValue) / (peakValue - mostRecentValue) * 100);
+                explanation = `${dataQualityWarning}Your sales dropped ${dropPercent.toFixed(0)}% from ${formatCurrency(peakValue)} to ${formatCurrency(mostRecentValue)}. Recovery target: ${formatCurrency(targetSales)} (+${growthRate.toFixed(0)}% growth), aiming to recover ${recoveryPercent.toFixed(0)}% of the gap. ${volatility > 0.3 ? 'High volatility detected - extra caution advised.' : 'Recovery takes time - this is a measured first step.'}`;
+            } else if (volatility > 0.3) {
+                explanation = `${dataQualityWarning}High volatility (${(volatility * 100).toFixed(0)}% variance) detected in your sales pattern. Target: ${formatCurrency(targetSales)} (+${growthRate.toFixed(0)}% growth). The confidence score reflects this uncertainty - use this as a guideline, not a guarantee.`;
+            } else {
+                let volatilityLabel = 'low';
+                if (volatility > 0.15) volatilityLabel = 'moderate';
+                explanation = `${dataQualityWarning}Based on ${n} quarters with ${volatilityLabel} volatility, recommended target: ${formatCurrency(targetSales)} (+${growthRate.toFixed(0)}% growth). ${n >= 4 ? `CAGR of ${(cagr * 100).toFixed(1)}% and average growth of ${(simpleAverageGrowth * 100).toFixed(1)}% support this target.` : 'Add more historical data to improve prediction accuracy.'}`;
+            }
+            
+            // Update UI
+            document.getElementById('results').style.display = 'block';
+            
+            const trendIcons = {
+                'growth': '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>',
+                'falling': '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>',
+                'stagnant': '<svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>'
+            };
+            
+            document.getElementById('trendIcon').innerHTML = trendIcons[trend];
+            document.getElementById('trendText').textContent = trend;
+            document.getElementById('trendScore').textContent = trendScore.toFixed(1) + '% momentum';
+            document.getElementById('recentValue').textContent = formatCurrency(mostRecentValue);
+            document.getElementById('recentMomentum').textContent = (recentMomentum * 100).toFixed(1) + '%';
+            document.getElementById('targetQuarter').textContent = selectedQuarter;
+            document.getElementById('targetValue').textContent = formatCurrency(targetSales);
+            document.getElementById('growthRate').textContent = '+' + growthRate.toFixed(1) + '%';
+            document.getElementById('confidenceScore').textContent = confidenceScore.toFixed(0) + '%';
+            document.getElementById('floorTarget').textContent = formatCurrency(floorTarget);
+            document.getElementById('realisticTarget').textContent = formatCurrency(targetSales);
+            document.getElementById('stretchTarget').textContent = formatCurrency(stretchTarget);
+            document.getElementById('floorPercent').textContent = '+' + floorGrowth.toFixed(0) + '% growth';
+            document.getElementById('targetPercent').textContent = '+' + growthRate.toFixed(0) + '% growth';
+            document.getElementById('stretchPercent').textContent = '+' + stretchGrowth.toFixed(0) + '% growth';
+            
+            // CAGR display
+            document.getElementById('cagrValue').textContent = n >= 4 ? (cagr * 100).toFixed(1) + '%' : 'N/A';
+            const cagrExplanation = document.getElementById('cagrExplanation');
+            if (n < 4) {
+                cagrExplanation.textContent = 'Requires 4+ quarters to calculate reliably. Add more historical data to see CAGR.';
+                document.getElementById('cagrValue').classList.add('text-gray-400');
+            } else {
+                cagrExplanation.textContent = 'Your compound annual growth rate. Shows your average year-over-year growth trend.';
+                document.getElementById('cagrValue').classList.remove('text-gray-400');
+            }
+            
+            const volatilityPercent = (volatility * 100).toFixed(0);
+            document.getElementById('volatilityValue').textContent = volatilityPercent + '%';
+            let volatilityLabel = 'Low';
+            if (volatility > 0.5) volatilityLabel = 'Very High';
+            else if (volatility > 0.3) volatilityLabel = 'High';
+            else if (volatility > 0.15) volatilityLabel = 'Moderate';
+            document.getElementById('volatilityLabel').textContent = volatilityLabel;
+            
+            document.getElementById('plainExplanation').textContent = explanation;
+            
+            document.getElementById('technicalDetails').innerHTML = `
+                <li class="bg-white/50 p-3 rounded">
+                    <strong>Data Quality:</strong> ${n} quarter${n > 1 ? 's' : ''} provided - ${n <= 3 ? 'INSUFFICIENT for statistical reliability' : n <= 5 ? 'MINIMAL for directional guidance' : 'ADEQUATE for basic forecasting'}
+                    <br><span class="text-xs">Industry standard: 24+ months (8+ quarters) for robust forecasting. Your current dataset allows only directional estimates.</span>
+                </li>
+                <li class="bg-white/50 p-3 rounded">
+                    <strong>Methodology:</strong> ${n <= 3 ? 'Simplified 2-factor model (momentum + baseline)' : '3-factor blend (momentum 50%, avg growth 30%, CAGR 20%)'}
+                    <br><span class="text-xs">${n <= 3 ? 'With limited data, we use only recent momentum and conservative baseline to avoid over-fitting.' : 'More data allows for multi-factor blending, but still limited compared to advanced forecasting methods.'}</span>
+                </li>
+                <li class="bg-white/50 p-3 rounded">
+                    <strong>Growth Caps:</strong> Absolute floor of +10%, absolute ceiling of +50% applied to all predictions
+                    <br><span class="text-xs">To ensure economic realism, no target will be below +10% growth (maintaining minimum ambition) or above +50% growth (preventing unrealistic expectations), regardless of calculated projections.</span>
+                </li>
+                <li class="bg-white/50 p-3 rounded">
+                    <strong>Recovery Mode:</strong> ${isRecovering ? `ACTIVE - Recent ${(recentMomentum * 100).toFixed(0)}% drop detected${consecutiveDeclines >= 2 ? ` (${consecutiveDeclines} consecutive quarters declining)` : ''}` : 'Not needed - sales stable or growing'}
+                    <br><span class="text-xs">${isRecovering ? 'Conservative recovery targets applied - we aim for gradual improvement within the 10-50% growth corridor.' : 'Normal growth projections applied based on historical patterns.'}</span>
+                </li>
+                <li class="bg-white/50 p-3 rounded">
+                    <strong>Confidence Score:</strong> ${confidenceScore.toFixed(0)}% - ${confidenceScore < 50 ? 'LOW' : confidenceScore < 65 ? 'MODERATE' : 'ACCEPTABLE'} certainty
+                    <br><span class="text-xs">Limited by: ${n <= 3 ? 'insufficient data points, ' : ''}${volatility > 0.3 ? 'high volatility (' + volatilityPercent + '%), ' : ''}${Math.abs(trendScore) < 5 ? 'unclear trend direction' : 'based on available data'}. Use as guidance, not guarantee.</span>
+                </li>
+            `;
+            
+            // Chart data
+            const chartLabels = [];
+            const chartSales = [];
+            
+            for (let i = 0; i < dataPoints.length; i++) {
+                chartLabels.push(dataPoints[i].year + ' ' + selectedQuarter);
+                chartSales.push(dataPoints[i].value);
+            }
+            
+            chartLabels.push('2026 ' + selectedQuarter);
+            chartSales.push(targetSales);
+            
+            console.log('Chart Labels:', chartLabels);
+            console.log('Chart Sales:', chartSales);
+            
+            // Simple trend line
+            const trendLine = [];
+            if (n >= 3) {
+                const avgGrowthRate = simpleAverageGrowth;
+                for (let i = 0; i < dataPoints.length; i++) {
+                    if (i === 0) {
+                        trendLine.push(dataPoints[0].value);
+                    } else {
+                        trendLine.push(trendLine[i-1] * (1 + avgGrowthRate));
+                    }
+                }
+                trendLine.push(trendLine[trendLine.length - 1] * (1 + avgGrowthRate));
+            } else {
+                for (let i = 0; i <= dataPoints.length; i++) {
+                    trendLine.push(null);
+                }
+            }
+            
+            // Destroy existing chart
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
+            
+            const canvas = document.getElementById('salesChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Build colors
+            const barColors = [];
+            const borderColors = [];
+            
+            for (let i = 0; i < chartSales.length; i++) {
+                if (i === chartSales.length - 1) {
+                    barColors.push('#8b5cf6');
+                    borderColors.push('#7c3aed');
+                } else {
+                    barColors.push('#4f46e5');
+                    borderColors.push('#4338ca');
+                }
+            }
+            
+            // Create chart
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        type: 'line',
+                        label: n >= 3 ? 'Trend Line' : 'Trend (Need 3+ Quarters)',
+                        data: trendLine,
+                        borderColor: n >= 3 ? '#f59e0b' : '#d1d5db',
+                        backgroundColor: n >= 3 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(209, 213, 219, 0.1)',
+                        borderWidth: n >= 3 ? 3 : 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        order: 1,
+                        hidden: n < 3
+                    }, {
+                        label: 'Quarterly Sales',
+                        data: chartSales,
+                        backgroundColor: barColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        order: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.label === 'Trend Line' || context.dataset.label === 'Trend (Need 3+ Quarters)') return null;
+                                    return context.dataset.label + ': ' + formatCurrency(Math.floor(context.parsed.y));
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
